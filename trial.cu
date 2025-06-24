@@ -1,5 +1,5 @@
 // ** Trial for my Personal Reference **
-
+// Trial test on Colab itself. 
 
 #include <cuda_runtime.h>
 #include <vector>
@@ -9,7 +9,7 @@
 // Similiar to Matrix Multiplication
 // There we use a 2D grid and 2D blocks
 // O(bcd), so can be parallelized
-__global__ void horner(const int *d_coeffs,const int *d_domain,const int *d_results,int d_coeffs_size,int d_batch_size,int d_domain_size){
+__global__ void horner(const int *d_coeffs,const int *d_domain,int *d_results,int d_coeffs_size,int d_batch_size,int d_domain_size){
     // 
     int i = blockIdx.x * blockDim.x + threadIdx.x; // Global index for the batch
     for (uint64_t j = 0; j < d_domain_size; ++j) {
@@ -22,13 +22,14 @@ __global__ void horner(const int *d_coeffs,const int *d_domain,const int *d_resu
             d_results[i * d_domain_size + j] = result; // Store the result
         }
     }
+
 }
 
 
 
 int main(){
     // These are our constraints 
-    int coeffs_size = 1 << 10;
+    int coeffs_size = 1 << 2;
     int batch_size = 10;
     int domain_size = 7;
     
@@ -44,37 +45,38 @@ int main(){
 
     int results[batch_size * domain_size];
 
-    size_t coeff_size = coeffs_size * sizeof(int);
-    size_t domain_size = domain_size * sizeof(int);
-    size_t batch_size = batch_size * sizeof(int);
-    size_t domain_size_bytes = domain_size * batch_size * sizeof(int);
     size_t coeffs_size_bytes = coeffs_size * batch_size * sizeof(int);
+    size_t domain_size_bytes = domain_size * batch_size * sizeof(int);
+    size_t results_size_bytes = batch_size * domain_size * sizeof(int);
     
-    int *d_coeffs, *d_domain, *d_results, *d_coeffs_size, *d_domain_size, *d_batch_size;
+    int *d_coeffs, *d_domain, *d_results;
     
     cudaMalloc(&d_coeffs, coeffs_size_bytes);
     cudaMalloc(&d_domain, domain_size_bytes);
-    cudaMalloc(&d_results, domain_size_bytes);
-    cudaMalloc(&d_coeffs_size, sizeof(int));
-    cudaMalloc(&d_domain_size, sizeof(int));
-    cudaMalloc(&d_batch_size, sizeof(int));
+    cudaMalloc(&d_results, results_size_bytes);
 
     cudaMemcpy(d_coeffs, coeffs, coeffs_size_bytes, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_domain, domain, domain_size_bytes, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_coeffs_size, &coeffs_size, sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_domain_size, &domain_size, sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_batch_size, &batch_size, sizeof(int), cudaMemcpyHostToDevice); 
+    cudaMemcpy(d_domain, domain, domain_size_bytes, cudaMemcpyHostToDevice); 
 
     // Launch the kernel 
 
     int threads_per_block = 256; // Number of threads per block
-    int num_blocks = (batch_size + threads_per_block - 1) / threads_per
+    int num_blocks = (batch_size + threads_per_block - 1) / threads_per_block;
     horner<<<num_blocks, threads_per_block>>>(d_coeffs, d_domain, d_results, coeffs_size, batch_size, domain_size);
     cudaDeviceSynchronize(); // Wait for the kernel to finish
-    cudaMemcpy(results, d_results, domain_size_bytes, cudaMemcpyDeviceToHost);
+    cudaMemcpy(results, d_results, results_size_bytes, cudaMemcpyDeviceToHost);
+    
+    // Print results
     for (int i = 0; i < batch_size; ++i) {
         for (int j = 0; j < domain_size; ++j) {
-            std::cout << "Result[" << i << "][" << j << "] = " << results[i * domain_size + j] << std::endl;
+            std::cout << "Result" << results[i * domain_size + j] << std::endl;
         }
     }
+    
+    // Clean up GPU memory
+    cudaFree(d_coeffs);
+    cudaFree(d_domain);
+    cudaFree(d_results);
+    
+    return 0;
 }
