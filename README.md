@@ -7,3 +7,8 @@ For example, evaluate the polynomials P₀(x), P₁(x), ..., Pₙ₋₁(x) over 
 You need to implement the function `poly_eval()` in the file `poly_eval.cu`. To test and bench - run `make test_poly_eval`. The function should run for any valid input parameters but the typical parameters are those given in the test file.
 
 Good luck!
+
+
+## My Solution 
+
+Run the makefile to 
