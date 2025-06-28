@@ -1,5 +1,5 @@
 // ** Trial for my Personal Reference **
-
+// trying different combinations of cpu + parallelization
 #include <cuda_runtime.h>
 #include <vector>
 #include <iostream>
@@ -119,8 +119,9 @@ void poly_eval(
     int domain_size,
     int batch_size,
     test_scalar *evals /*OUT*/)
-{
-    dim3 grid_size((batch_size + 255) / 256);
+{   
+    // more optimization here ig 
+    dim3 grid_size(1);
     dim3 block_size(256);
     horner_kernel<<<grid_size, block_size>>>(coeffs, domain, coeffs_size, domain_size, batch_size, evals);
 }

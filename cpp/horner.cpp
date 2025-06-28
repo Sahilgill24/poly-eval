@@ -1,13 +1,10 @@
 // ** Basic implementation of polynomial evaluation for my personal reference **
-// Honner and FFTeval based implementations.
+// Honner
 #include <stdio.h>
 #include <vector>
 #include <string>
 #include <chrono>
 #include <cmath>
-
-const double PI = acos(-1.0);
-
 
 
 class Scalar
